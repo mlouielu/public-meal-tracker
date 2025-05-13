@@ -256,9 +256,26 @@ def log_meal():
 @app.route("/api/remind", methods=["POST"])
 @rate_limit(3, 3600)
 def send_reminder():
-    # In a real application, this would send a notification
-    # For now, we'll just log the reminder request
     print("Reminder to eat sent at", datetime.now().isoformat())
+    data = request.get_json() if request.is_json else {}
+    custom_message = data.get("message", "Time to eat!")
+    sender = data.get("sender", "Guest")
+
+    # Send Telegram message if token is configured
+    telegram_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    telegram_chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+
+    if telegram_token and telegram_chat_id:
+        # Format telegram message
+        message = f"🔔 <b>Meal Reminder from {sender}</b>\n\n{custom_message}"
+
+        # Send to Telegram
+        telegram_url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
+        requests.post(
+            telegram_url,
+            data={"chat_id": telegram_chat_id, "text": message, "parse_mode": "HTML"},
+        )
+
     return jsonify({"success": True, "message": "Reminder sent"})
 
 
