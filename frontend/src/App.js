@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
 import { PERSON_NAME, PERSON_PRONOUN } from './constants';
+import CONFIG from './config';
 
 function App() {
   const [mealStatus, setMealStatus] = useState({
@@ -17,7 +18,7 @@ function App() {
   const fetchMealStatus = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/meals');
+      const response = await axios.get(`${CONFIG.apiUrl}/meals`);
       setMealStatus(response.data);
       setError(null);
     } catch (err) {
@@ -30,7 +31,7 @@ function App() {
 
   const sendReminder = async () => {
     try {
-      await axios.post('http://localhost:5000/api/remind');
+      await axios.post(`${CONFIG.apiUrl}/remind`);
       alert('Reminder sent!');
     } catch (err) {
       setError('Failed to send reminder');

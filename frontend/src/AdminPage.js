@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { PERSON_NAME } from './constants';
+import CONFIG from './config';
+
 
 // Configure axios to include credentials (cookies) with all requests
 axios.defaults.withCredentials = true;
@@ -23,7 +25,7 @@ function AdminPage() {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/auth/status');
+        const response = await axios.get(`${CONFIG.apiUrl}/auth/status`);
         setAuthenticated(response.data.authenticated);
         if (response.data.authenticated) {
           setUserData({
@@ -44,7 +46,7 @@ function AdminPage() {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/auth/login');
+      const response = await axios.get(`${CONFIG.apiUrl}/auth/login`);
       // Redirect the user to Google's OAuth page
       window.location.href = response.data.redirect_url;
     } catch (error) {
@@ -56,7 +58,7 @@ function AdminPage() {
 
   const handleLogout = async () => {
     try {
-      await axios.post('http://localhost:5000/api/auth/logout');
+      await axios.post(`${CONFIG.apiUrl}/auth/logout`);
       setAuthenticated(false);
       setUserData(null);
       navigate('/');
@@ -88,7 +90,7 @@ function AdminPage() {
         payload.timestamp = customTimestamp;
       }
 
-      const response = await axios.post('http://localhost:5000/api/meals', payload);
+      const response = await axios.post(`${CONFIG.apiUrl}/meals`, payload);
 
       // Format the timestamp for display
       const timestampDisplay = new Date(response.data.timestamp).toLocaleString();
