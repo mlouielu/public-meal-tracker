@@ -1,14 +1,16 @@
-from flask import Flask, request, jsonify, redirect, session, url_for
-from flask_cors import CORS
-from datetime import datetime, timedelta
+import secrets
 import sqlite3
 import os
 import json
-import requests
+import zoneinfo
+from datetime import datetime, timedelta
 from functools import wraps
-from oauthlib.oauth2 import WebApplicationClient
-import secrets
+
+
 import dotenv
+from flask import Flask, request, jsonify, redirect, session, url_for
+from flask_cors import CORS
+from oauthlib.oauth2 import WebApplicationClient
 
 
 dotenv.load_dotenv()
@@ -195,7 +197,10 @@ def get_meal_status():
     # Check if the last meal was more than 3 hours ago
     if timestamp:
         last_meal_time = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-        current_time = datetime.now()
+
+        # XXX: WHYYYYYYYYYYYYYYYYYYYYYY do you hard code timezone?
+        eastern = zoneinfo.ZoneInfo("America/New_York")
+        current_time = datetime.now(eastern)
         time_difference = current_time - last_meal_time
 
         # If more than 3 hours have passed and the last status was "ate",
