@@ -10,7 +10,11 @@ A public meal tracker for anyone who needs.
 
 Introduction
 ------------
-| ![ate screenshot](assets/page_screenshot_1.png) | ![not_yet screenshot](assets/page_screenshot_2.png) |
+| You Ate | Not yet |
+| :--: | :--: |
+| <img src="assets/page_screenshot_1.png" width="50%"/> | <img src="assets/page_screenshot_2.png" width="50%" /> |
+
+This is an SPA that lets you publish your meal status and allows others to remind you to eat via a Telegram bot.
 
 Prerequesites
 -------------
