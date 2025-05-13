@@ -86,8 +86,13 @@ function AdminPage() {
 
       // If using custom time, add it to the payload
       if (useCustomTime && customDate && customTime) {
-        const customTimestamp = `${customDate}T${customTime}:00`;
-        payload.timestamp = customTimestamp;
+        const localDate = new Date(`${customDate}T${customTime}:00`);
+		const utcTimestamp = localDate.toISOString();
+
+		console.log('Original input:', `${customDate}T${customTime}:00`);
+		console.log('Converted to UTC:', utcTimestamp);
+
+		payload.timestamp = utcTimestamp;
       }
 
       const response = await axios.post(`${CONFIG.apiUrl}/meals`, payload);
