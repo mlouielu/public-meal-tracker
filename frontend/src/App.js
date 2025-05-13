@@ -136,15 +136,6 @@ function App() {
           )}
         </div>
       )}
-
-      <div className="mt-6 text-center">
-        <a
-          href="/admin"
-          className="text-blue-500 hover:text-blue-700 underline"
-        >
-          Go to Admin Page
-        </a>
-      </div>
     </div>
   );
 }
