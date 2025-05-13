@@ -11,12 +11,13 @@ import requests
 from flask import Flask, request, jsonify, redirect, session, url_for
 from flask_cors import CORS
 from oauthlib.oauth2 import WebApplicationClient
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from utils import rate_limit
 
-dotenv.load_dotenv()
 
 # Configuration
+dotenv.load_dotenv()
 GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
@@ -25,6 +26,7 @@ ALLOWED_EMAIL = os.environ.get("ALLOWED_EMAIL")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 app.secret_key = secrets.token_hex(16)  # Generate a random secret key
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SECURE"] = True  # Set to False for development without HTTPS
