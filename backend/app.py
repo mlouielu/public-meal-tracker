@@ -22,6 +22,7 @@ GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
 FLASK_SECRET_KEY = os.environ.get("FLASK_SECRET_KEY")
 ALLOWED_EMAIL = os.environ.get("ALLOWED_EMAIL")
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)  # Generate a random secret key
@@ -147,10 +148,10 @@ def callback():
         # Check if the user's email matches the allowed email
         if user_email == ALLOWED_EMAIL:
             # Redirect to frontend with success
-            return redirect("http://localhost:3000/admin")
+            return redirect(f"{FRONTEND_URL}/admin")
         else:
             # Redirect to frontend with unauthorized
-            return redirect("http://localhost:3000/unauthorized")
+            return redirect(f"{FRONTEND_URL}/unauthorized")
     else:
         return jsonify({"error": "User email not verified by Google"}), 400
 
