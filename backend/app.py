@@ -3,9 +3,8 @@ import sqlite3
 import os
 import json
 import zoneinfo
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import wraps
-
 
 import dotenv
 from flask import Flask, request, jsonify, redirect, session, url_for
@@ -196,11 +195,15 @@ def get_meal_status():
 
     # Check if the last meal was more than 3 hours ago
     if timestamp:
-        last_meal_time = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+        eastern = zoneinfo.ZoneInfo("America/New_York")
+
+        last_meal_time = datetime.fromisoformat(
+            timestamp.replace("Z", "+00:00")
+        ).astimezone(eastern)
 
         # XXX: WHYYYYYYYYYYYYYYYYYYYYYY do you hard code timezone?
-        eastern = zoneinfo.ZoneInfo("America/New_York")
-        current_time = datetime.now(eastern)
+        utc_now = datetime.now(timezone.utc)
+        current_time = utc_now.astimezone(eastern)
         time_difference = current_time - last_meal_time
 
         # If more than 3 hours have passed and the last status was "ate",
