@@ -32,6 +32,7 @@ function App() {
 
   const [reminderMessage, setReminderMessage] = useState('');
   const [reminderSender, setReminderSender] = useState('');
+  const [reminderSending, setReminderSending] = useState(false);
   const [showReminderInput, setShowReminderInput] = useState(true);
 
   const handleReminderClick = () => {
@@ -40,7 +41,7 @@ function App() {
 
   const sendReminder = async () => {
     try {
-      setLoading(true);
+      setReminderSending(true);
       const payload = { message: reminderMessage || "Time to eat!" };
       const response = await axios.post(`${CONFIG.apiUrl}/remind`, payload);
 
@@ -63,7 +64,7 @@ function App() {
       }
       console.error(err);
     } finally {
-      setLoading(false);
+      setReminderSending(false);
     }
   };
 
@@ -183,9 +184,9 @@ function App() {
                       <button
                         onClick={sendReminder}
                         className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-green-600"
-                        disabled={loading}
+                        disabled={reminderSending}
                       >
-                        {loading ? 'Sending...' : 'Send Meal Reminder'}
+                        {reminderSending ? 'Sending...' : 'Send Meal Reminder'}
                       </button>
                       <button
                         onClick={() => setShowReminderInput(false)}
