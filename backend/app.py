@@ -12,6 +12,8 @@ from flask import Flask, request, jsonify, redirect, session, url_for
 from flask_cors import CORS
 from oauthlib.oauth2 import WebApplicationClient
 
+from utils import rate_limit
+
 dotenv.load_dotenv()
 
 # Configuration
@@ -250,6 +252,7 @@ def log_meal():
 
 
 @app.route("/api/remind", methods=["POST"])
+@rate_limit(3, 3600)
 def send_reminder():
     # In a real application, this would send a notification
     # For now, we'll just log the reminder request
