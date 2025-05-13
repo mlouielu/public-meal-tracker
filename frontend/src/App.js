@@ -112,7 +112,7 @@ function App() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <h1 className="text-4xl font-extrabold leading-none tracking-tight text-gray-800 mb-4">{PERSON_NAME}'s Public Meal Tracker 🍲</h1>
-		<p class="text-sm text-gray-500 mb-4">This is a public meal tracker for {PERSON_NAME}. {PERSON_PRONOUN} lost 5 kg (11 lbs) past month becasue {PERSON_PRONOUN} only eat one meal a day. {PERSON_NAME} needs your help!</p>
+		<p class="text-sm text-gray-500 mb-4">This is a public meal tracker for {PERSON_NAME}. {PERSON_PRONOUN} lost 5 kg (11 lbs) last month becasue {PERSON_PRONOUN} only eats one meal a day. {PERSON_NAME} needs your help!</p>
 
       {error ? (
         <div className="text-center py-4">
