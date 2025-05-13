@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 from functools import wraps
 
 import dotenv
+import requests
 from flask import Flask, request, jsonify, redirect, session, url_for
 from flask_cors import CORS
 from oauthlib.oauth2 import WebApplicationClient
