@@ -54,14 +54,14 @@ Authorized JavaScript origins:
 - For localhost testing:
   - http://localhost:3000
 - For production:
-  - <your web URL>
+  - your web URL
 
 Authorized redirect URIs:
 
 - For localhost testing:
   - http://localhost:5000/api/auth/login/callback
 - For production
-  - <your web URL>/api/auth/login/callback
+  - your web URL/api/auth/login/callback
 
 
 After setting it up, copy your client ID and client secret into `backend/.env`.
