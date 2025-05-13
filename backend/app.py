@@ -12,7 +12,6 @@ from flask import Flask, request, jsonify, redirect, session, url_for
 from flask_cors import CORS
 from oauthlib.oauth2 import WebApplicationClient
 
-
 dotenv.load_dotenv()
 
 # Configuration
@@ -214,11 +213,14 @@ def get_meal_status():
                 {
                     "ate": False,
                     "timestamp": None,
-                    "last_meal_timestamp": timestamp,
+                    "last_meal_timestamp": last_meal_time,
                     "status_changed": True,
                     "time_since_last_meal": int(time_difference.total_seconds() / 60),
                 }
             )
+
+        # Within the time, replace timestamp to local time
+    #        timestamp = last_meal_time
 
     return jsonify({"ate": bool(ate), "timestamp": timestamp})
 
@@ -230,8 +232,11 @@ def log_meal():
     ate = data.get("ate", False)
 
     # Check if a custom timestamp was provided
+    # Frontend should make sure it is UTC time
     custom_timestamp = data.get("timestamp")
-    timestamp = custom_timestamp if custom_timestamp else datetime.now().isoformat()
+    timestamp = (
+        custom_timestamp if custom_timestamp else datetime.now(timezone.utc).isoformat()
+    )
     print(timestamp)
 
     conn = sqlite3.connect("meals.db")
