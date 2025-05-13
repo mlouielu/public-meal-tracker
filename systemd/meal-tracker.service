@@ -1,0 +1,14 @@
+[Unit]
+Description=Meal Tracker Flask Application
+After=network.target
+
+[Service]
+User=pyapp
+Group=pyapp
+WorkingDirectory=/path/to/your/public-meal-tracker/backend/
+Environment="PATH=/path/to/your/public-meal-tracker/.venv/bin"
+ExecStart=/path/to/your/public-meal-tracker/.venv/bin/gunicorn --workers 1 --bind 127.0.0.1:5566 app:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
