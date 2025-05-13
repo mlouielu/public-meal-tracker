@@ -5,6 +5,4 @@ const CONFIG = {
   appName: 'Public Meal Tracker',
 };
 
-console.log(CONFIG);
-
 export default CONFIG;
