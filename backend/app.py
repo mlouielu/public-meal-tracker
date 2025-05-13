@@ -13,9 +13,6 @@ import dotenv
 
 dotenv.load_dotenv()
 
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
-
-
 # Configuration
 GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
