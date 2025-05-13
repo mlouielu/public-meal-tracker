@@ -145,10 +145,10 @@ def callback():
         # Check if the user's email matches the allowed email
         if user_email == ALLOWED_EMAIL:
             # Redirect to frontend with success
-            return redirect(f"{FRONTEND_URL}/admin")
+            return redirect(f"{FRONTEND_URL}/#admin")
         else:
             # Redirect to frontend with unauthorized
-            return redirect(f"{FRONTEND_URL}/unauthorized")
+            return redirect(f"{FRONTEND_URL}")
     else:
         return jsonify({"error": "User email not verified by Google"}), 400
 
