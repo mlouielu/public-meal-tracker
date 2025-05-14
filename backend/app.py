@@ -24,6 +24,7 @@ GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
 FLASK_SECRET_KEY = os.environ.get("FLASK_SECRET_KEY")
 ALLOWED_EMAIL = os.environ.get("ALLOWED_EMAIL")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+DATABASE_PATH = os.environ.get("DATABASE_PATH", "meals.db")
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
@@ -39,7 +40,7 @@ client = WebApplicationClient(GOOGLE_CLIENT_ID)
 
 # Initialize database only if it doesn't exist
 def init_db_if_needed():
-    db_path = "meals.db"
+    db_path = DATABASE_PATH
     db_exists = os.path.exists(db_path)
 
     # Only initialize if the database file doesn't exist
@@ -184,7 +185,7 @@ def get_google_provider_cfg():
 # API routes
 @app.route("/api/meals", methods=["GET"])
 def get_meal_status():
-    conn = sqlite3.connect("meals.db")
+    conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
 
     # Get the most recent meal entry
@@ -243,7 +244,7 @@ def log_meal():
     )
     print(timestamp)
 
-    conn = sqlite3.connect("meals.db")
+    conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
 
     cursor.execute("INSERT INTO meals (ate, timestamp) VALUES (?, ?)", (ate, timestamp))
