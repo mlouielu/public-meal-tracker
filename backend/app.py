@@ -25,6 +25,7 @@ FLASK_SECRET_KEY = os.environ.get("FLASK_SECRET_KEY")
 ALLOWED_EMAIL = os.environ.get("ALLOWED_EMAIL")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
 DATABASE_PATH = os.environ.get("DATABASE_PATH", "meals.db")
+DEFAULT_TIMEZONE = os.environ.get("DEFAULT_TIMEZONE", "America/New_York")
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
@@ -36,6 +37,52 @@ CORS(app, supports_credentials=True)  # Enable CORS with credentials support
 
 # OAuth 2 client setup
 client = WebApplicationClient(GOOGLE_CLIENT_ID)
+
+
+# Helper functions for timezone handling
+def get_timezone():
+    """Get the timezone object from the configured timezone name"""
+    try:
+        return zoneinfo.ZoneInfo(DEFAULT_TIMEZONE)
+    except Exception as e:
+        print(f"Error loading timezone {DEFAULT_TIMEZONE}: {e}")
+        return timezone.utc
+
+
+def now_in_timezone():
+    """Get current time in the configured timezone"""
+    return datetime.now(timezone.utc).astimezone(get_timezone())
+
+
+def datetime_from_str(timestamp_str):
+    """Convert a timestamp string to a datetime object in the configured timezone"""
+    if not timestamp_str:
+        return None
+    # Handle various timestamp formats
+    if "Z" in timestamp_str:
+        # UTC timestamp with Z
+        dt = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+    elif "+" in timestamp_str or "-" in timestamp_str and "T" in timestamp_str:
+        # ISO format with timezone
+        dt = datetime.fromisoformat(timestamp_str)
+    else:
+        # Assume naive datetime is in UTC
+        dt = datetime.fromisoformat(timestamp_str)
+        dt = dt.replace(tzinfo=timezone.utc)
+
+    # Convert to configured timezone
+    return dt.astimezone(get_timezone())
+
+
+def datetime_to_str(dt):
+    """Convert a datetime object to ISO string in the configured timezone"""
+    if not dt:
+        return None
+    # Make sure dt has timezone info
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    # Convert to configured timezone and return ISO format
+    return dt.astimezone(get_timezone()).isoformat()
 
 
 # Initialize database only if it doesn't exist
@@ -278,6 +325,75 @@ def send_reminder():
         )
 
     return jsonify({"success": True, "message": "Reminder sent"})
+
+
+@app.route("/api/meals/recent", methods=["GET"])
+@login_required
+def get_recent_meals():
+    """Get recent meal entries"""
+    try:
+        # Get query parameter for limit (default to 5)
+        limit = request.args.get("limit", 5, type=int)
+
+        # Connect to database
+        conn = sqlite3.connect(DATABASE_PATH)
+        cursor = conn.cursor()
+
+        # Get recent meals with limit
+        cursor.execute(
+            "SELECT id, ate, timestamp FROM meals ORDER BY timestamp DESC LIMIT ?",
+            (limit,),
+        )
+        meals = cursor.fetchall()
+        conn.close()
+
+        # Format results
+        result = []
+        for meal_id, ate, timestamp in meals:
+            # Convert timestamp to timezone-aware datetime
+            formatted_time = timestamp
+            if timestamp:
+                dt = datetime_from_str(timestamp)
+                formatted_time = datetime_to_str(dt)
+
+            result.append(
+                {"id": meal_id, "ate": bool(ate), "timestamp": formatted_time}
+            )
+
+        return jsonify({"success": True, "meals": result})
+    except Exception as e:
+        print(f"Error getting recent meals: {str(e)}")
+        return jsonify({"success": False, "error": "Failed to get recent meals"}), 500
+
+
+@app.route("/api/meals/<int:meal_id>", methods=["DELETE"])
+@login_required
+def delete_meal(meal_id):
+    """Delete a meal entry by ID"""
+    try:
+        # Connect to database
+        conn = sqlite3.connect(DATABASE_PATH)
+        cursor = conn.cursor()
+
+        # Check if meal exists
+        cursor.execute("SELECT id FROM meals WHERE id = ?", (meal_id,))
+        meal = cursor.fetchone()
+
+        if not meal:
+            conn.close()
+            return jsonify({"success": False, "error": "Meal not found"}), 404
+
+        # Delete the meal
+        cursor.execute("DELETE FROM meals WHERE id = ?", (meal_id,))
+        conn.commit()
+        conn.close()
+
+        return jsonify(
+            {"success": True, "message": f"Meal with ID {meal_id} deleted successfully"}
+        )
+    except Exception as e:
+        print(f"Error deleting meal: {str(e)}")
+        return jsonify({"success": False, "error": "Failed to delete meal"}), 500
 
 
 if __name__ == "__main__":
