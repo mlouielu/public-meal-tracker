@@ -15,11 +15,88 @@ function AdminPage() {
   const [customDate, setCustomDate] = useState('');
   const [customTime, setCustomTime] = useState('');
   const [showCustomTime, setShowCustomTime] = useState(false);
+  const [recentMeals, setRecentMeals] = useState([]);
+  const [loadingMeals, setLoadingMeals] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(null);
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    mealId: null,
+    mealInfo: null
+  });
 
   const [authenticated, setAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
+
+
+  // Fetch recent meals
+  const fetchRecentMeals = async () => {
+    try {
+      setLoadingMeals(true);
+      const response = await axios.get(`${CONFIG.apiUrl}/meals/recent?limit=5`);
+
+      if (response.data.success) {
+        setRecentMeals(response.data.meals);
+      } else {
+        console.error('Failed to fetch recent meals:', response.data.error);
+      }
+    } catch (err) {
+      console.error('Error fetching recent meals:', err);
+    } finally {
+      setLoadingMeals(false);
+    }
+  };
+
+  // Open confirmation dialog with meal info
+  const openConfirmDialog = (mealId, e) => {
+    e.preventDefault(); // Prevent any default behavior
+    const selectedMeal = recentMeals.find(meal => meal.id === mealId);
+    setConfirmDialog({
+      isOpen: true,
+      mealId,
+      mealInfo: selectedMeal
+    });
+  };
+
+  // Close dialog without deleting
+  const closeConfirmDialog = () => {
+    setConfirmDialog({ isOpen: false, mealId: null, mealInfo: null });
+  };
+
+
+  // Delete a meal log
+  const deleteMeal = async (mealId) => {
+    try {
+      setDeleteLoading(mealId);
+      closeConfirmDialog();
+
+      const response = await axios.delete(`${CONFIG.apiUrl}/meals/${mealId}`);
+
+      if (response.data.success) {
+        // Refresh the meal list
+        fetchRecentMeals();
+        setMessage(`Meal log deleted successfully`);
+        setMessageType('success');
+      } else {
+        setMessage(`Failed to delete meal log: ${response.data.error}`);
+        setMessageType('error');
+      }
+    } catch (err) {
+      setMessage('Failed to delete meal log');
+      setMessageType('error');
+      console.error('Error deleting meal:', err);
+    } finally {
+      setDeleteLoading(null);
+
+      // Auto-clear success message after 3 seconds
+      setTimeout(() => {
+        if (messageType === 'success') {
+          setMessage(null);
+        }
+      }, 3000);
+    }
+  };
 
   // Check authentication status on component mount
   useEffect(() => {
@@ -32,6 +109,7 @@ function AdminPage() {
             email: response.data.email,
             name: response.data.name
           });
+		  fetchRecentMeals();
         }
       } catch (error) {
         console.error('Error checking authentication status:', error);
@@ -39,7 +117,7 @@ function AdminPage() {
       } finally {
         setCheckingAuth(false);
       }
-    };
+   };
 
     checkAuthStatus();
   }, []);
@@ -290,6 +368,115 @@ function AdminPage() {
           </div>
         )}
       </div>
+
+      {/* Recent Meals Section */}
+      <div className="mt-8 w-full max-w-lg">
+        <h2 className="text-xl font-bold text-gray-800 mb-3">Recent Meal Logs</h2>
+
+        {loadingMeals ? (
+          <div className="text-center py-4">
+            <p className="text-gray-600">Loading meal logs...</p>
+          </div>
+        ) : recentMeals.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-md p-4 text-center text-gray-600">
+            No meal logs found.
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Time
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {recentMeals.map((meal) => (
+                  <tr key={meal.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {meal.ate ? (
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          Ate
+                        </span>
+                      ) : (
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                          Did Not Eat
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {meal.timestamp}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={(e) => openConfirmDialog(meal.id, e)}
+                        disabled={deleteLoading === meal.id}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        {deleteLoading === meal.id ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+      {/* Confirmation Dialog */}
+      {confirmDialog.isOpen && confirmDialog.mealInfo && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="mb-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Confirm Deletion</h3>
+
+              <div className="bg-gray-50 p-4 rounded-md mb-4">
+                <div className="flex items-center mb-2">
+                  <span className="font-medium text-gray-700 mr-2">Status:</span>
+                  {confirmDialog.mealInfo.ate ? (
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                      Ate
+                    </span>
+                  ) : (
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                      Did Not Eat
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center">
+                  <span className="font-medium text-gray-700 mr-2">Time:</span>
+                  <span className="text-sm text-gray-600">{confirmDialog.mealInfo.timestamp}</span>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-500">
+                Are you sure you want to delete this meal record? This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={closeConfirmDialog}
+                className="bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-md font-medium text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteMeal(confirmDialog.mealId)}
+                className="bg-red-500 text-white hover:bg-red-600 px-4 py-2 rounded-md font-medium text-sm"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mt-6 text-center">
         <a
